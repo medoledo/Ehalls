@@ -71,6 +71,7 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
                 'course_title': latest.course.title,
                 'course_code': f"{latest.course.subject} {latest.course.course_number}".strip(),
                 'end_time': latest.end_time.strftime('%I:%M %p').lstrip('0'),
+                'raw_end_time': latest.end_time,
             }
             if course_filter:
                 q = course_filter.lower()
@@ -81,13 +82,21 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
         else:
             if not course_filter:
                 future = [m for m in meetings if m.start_time > now_time]
+                is_soon_occupied = False
                 if future:
                     next_meeting = min(future, key=lambda m: m.start_time)
                     free_till = next_meeting.start_time.strftime('%I:%M %p').lstrip('0')
+                    
+                    from datetime import datetime, date
+                    t1 = datetime.combine(date.min, next_meeting.start_time)
+                    t2 = datetime.combine(date.min, now_time)
+                    if (t1 - t2).total_seconds() / 60 <= 10:
+                        is_soon_occupied = True
                 else:
                     free_till = 'End of Day'
-                free_rooms.append({'building': building, 'room': room, 'free_till': free_till})
+                free_rooms.append({'building': building, 'room': room, 'free_till': free_till, 'is_soon_occupied': is_soon_occupied})
 
+    occupied_rooms.sort(key=lambda x: x['raw_end_time'])
     return occupied_rooms, free_rooms
 
 def get_all_buildings():
