@@ -1,0 +1,26 @@
+﻿=== TERMS ===
+  202630 - Summer/2026
+  202620 - Spring/2026
+  202610 - Fall/2025-2026 (View Only)
+  202540 - ShortWinter/2025 (View Only)
+  202530 - Summer/2025 (View Only)
+  202520 - Spring/2025 (View Only)
+  202510 - Fall/2024-2025 (View Only)
+  202220 - Spring/2022 (View Only)
+  202210 - Fall/2021-2022 (View Only)
+  202120 - Spring/2021 (View Only)
+
+Using term: 202630
+
+=== SESSION INIT ===
+  POST term/search: 200
+  GET classSearch: 200
+  Cookies: {'JSESSIONID': '879109FB1E7DC6F589CA9B54957DE772', 'SERVERID': 's9'}
+
+=== SUBJECTS (first 5) ===
+  Status: 200, Count: 0
+
+=== TRY OLDER TERMS ===
+  Term 202620 (Spring/2026), subject=OT.5: 0 sections, totalCount=0
+  Term 202610 (Fall/2025-2026 (View Only)), subject=OT.5: 0 sections, totalCount=0
+  Term 202540 (ShortWinter/2025 (View Only)), subject=CLC5: 0 sections, totalCount=0
