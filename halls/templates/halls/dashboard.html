@@ -8,7 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'media',
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -24,6 +24,13 @@
           }
         }
       }
+    }
+  </script>
+  <script>
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark')
     }
   </script>
   <style>
@@ -46,6 +53,9 @@
     </div>
     
     <div class="flex items-center w-full sm:w-auto justify-between sm:justify-end border border-must-lightBlue/50 dark:border-slate-700 bg-must-blue/30 dark:bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2">
+      <button id="theme-toggle" onclick="toggleTheme()" class="text-gray-300 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-slate-700/50 focus:outline-none rounded-lg text-xl p-1.5 mr-2 transition-colors">
+        🌓
+      </button>
       <div class="text-right">
         <div id="live-clock" class="text-lg font-mono font-bold text-must-green dark:text-green-400 tabular-nums leading-none"></div>
         <div id="live-date"  class="text-[0.65rem] font-semibold text-blue-200 dark:text-slate-400 mt-1 uppercase tracking-widest"></div>
@@ -135,7 +145,7 @@
         {% for m in searched_meetings %}
         <div class="card-hover bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden min-h-[140px]">
           <div class="absolute top-0 left-0 w-1.5 h-full bg-must-blue"></div>
-          <div class="flex items-start justify-between gap-2">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h3 class="font-black text-gray-900 dark:text-white text-lg leading-none">{{ m.room }}</h3>
               <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1.5">{{ m.building }}</p>
@@ -165,9 +175,9 @@
         <div class="h-[1px] bg-gray-200 flex-grow"></div>
       </div>
 
-      <div id="free-list" class="grid grid-cols-2 lg:grid-cols-1 gap-3">
+      <div id="free-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
         {% for r in free_rooms %}
-        <div class="card-hover bg-white dark:bg-slate-800 border border-green-100/50 dark:border-green-900/30 rounded-2xl p-4 shadow-sm flex items-center justify-between group">
+        <div class="card-hover bg-white dark:bg-slate-800 border border-green-100/50 dark:border-green-900/30 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group">
           <div class="flex items-center gap-4">
             <div class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center shrink-0 border border-green-100/60 dark:border-green-800/50 group-hover:bg-must-green group-hover:text-white group-hover:border-must-green transition-colors">
               <svg class="w-5 h-5 text-must-green dark:text-green-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -201,7 +211,7 @@
         {% for r in occupied_rooms %}
         <div class="card-hover bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden group min-h-[140px]">
           <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500 dark:bg-red-400"></div>
-          <div class="flex items-start justify-between gap-2">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <h3 class="font-black text-gray-900 dark:text-white text-lg md:text-xl leading-none flex items-center gap-2">
                 {{ r.room }}
@@ -251,6 +261,15 @@
     // So we don't strictly *need* to fetch dynamically if 'at' is set, but let's just make sure.
   }
   // setInterval(refreshRooms, 15000); // 15 seconds for snappier updates
+  function toggleTheme() {
+    if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+    } else {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+    }
+  }
 })();
 </script>
 </body>
