@@ -8,6 +8,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'media',
       theme: {
         extend: {
           colors: {
@@ -27,48 +28,47 @@
   </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { background-color: #f6f8fb; }
     .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01); }
     .badge { display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.70rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
   </style>
 </head>
-<body class="text-gray-800 min-h-screen antialiased flex flex-col">
+<body class="bg-[#f6f8fb] text-gray-800 dark:bg-slate-900 dark:text-gray-200 min-h-screen antialiased flex flex-col transition-colors duration-300">
 
-<header class="sticky top-0 z-50 bg-must-blue border-b border-must-lightBlue shadow transition-all duration-300">
+<header class="sticky top-0 z-50 bg-must-blue dark:bg-slate-900 border-b border-must-lightBlue dark:border-slate-800 shadow transition-all duration-300">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
     <div class="flex items-center gap-4 w-full sm:w-auto">
-      <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm text-must-blue">🏛️</div>
+      <div class="w-11 h-11 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 shadow-sm text-must-blue dark:text-blue-400">🏛️</div>
       <div>
         <h1 class="text-lg font-bold text-white leading-tight tracking-tight">MUST Hall Finder</h1>
-        <p class="text-xs font-medium text-blue-200">Misr University for Science & Technology</p>
+        <p class="text-xs font-medium text-blue-200 dark:text-slate-400">Misr University for Science & Technology</p>
       </div>
     </div>
     
-    <div class="flex items-center w-full sm:w-auto justify-between sm:justify-end border border-must-lightBlue/50 bg-must-blue/30 backdrop-blur-sm rounded-lg px-4 py-2">
+    <div class="flex items-center w-full sm:w-auto justify-between sm:justify-end border border-must-lightBlue/50 dark:border-slate-700 bg-must-blue/30 dark:bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2">
       <div class="text-right">
-        <div id="live-clock" class="text-lg font-mono font-bold text-must-green tabular-nums leading-none"></div>
-        <div id="live-date"  class="text-[0.65rem] font-semibold text-blue-200 mt-1 uppercase tracking-widest"></div>
+        <div id="live-clock" class="text-lg font-mono font-bold text-must-green dark:text-green-400 tabular-nums leading-none"></div>
+        <div id="live-date"  class="text-[0.65rem] font-semibold text-blue-200 dark:text-slate-400 mt-1 uppercase tracking-widest"></div>
       </div>
     </div>
   </div>
 </header>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-200/80 p-5 w-full">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-slate-700 p-5 w-full">
     <form method="GET" class="flex flex-col xl:flex-row gap-5 items-start xl:items-end w-full" id="filter-form">
       
       <!-- Filter Building -->
       <div class="w-full xl:w-1/4">
-        <label for="building-select" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Filter by building</label>
+        <label for="building-select" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 ml-1">Filter by building</label>
         <div class="relative">
-          <select name="building" id="building-select" onchange="this.form.submit()" class="w-full appearance-none bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm md:text-base text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-must-blue/40 focus:border-must-blue transition-all cursor-pointer shadow-sm">
+          <select name="building" id="building-select" onchange="this.form.submit()" class="w-full appearance-none bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm md:text-base text-gray-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-must-blue/40 dark:focus:ring-blue-500 focus:border-must-blue dark:focus:border-blue-500 transition-all cursor-pointer shadow-sm">
             <option value="">🏢 All Buildings</option>
             {% for b in buildings %}
               <option value="{{ b }}" {% if b == selected_building %}selected{% endif %}>{{ b }}</option>
             {% endfor %}
           </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 dark:text-gray-400">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </div>
         </div>
@@ -76,10 +76,10 @@
 
        <!-- Search Course -->
        <div class="w-full xl:w-1/4">
-        <label for="course-input" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Search Course (E.g. CSE)</label>
+        <label for="course-input" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 ml-1">Search Course (E.g. CSE)</label>
         <div class="relative">
-          <input type="text" name="course" id="course-input" placeholder="Course code or name" value="{{ selected_course }}" onchange="this.form.submit()" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 pl-10 text-sm md:text-base text-gray-900 font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-must-blue/40 focus:border-must-blue shadow-sm transition-all" />
-          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+          <input type="text" name="course" id="course-input" placeholder="Course code or name" value="{{ selected_course }}" onchange="this.form.submit()" class="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-2.5 pl-10 text-sm md:text-base text-gray-900 font-medium placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-must-blue/40 focus:border-must-blue shadow-sm transition-all" />
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 dark:text-gray-500">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
           </div>
         </div>
@@ -87,34 +87,34 @@
 
       <!-- Specific Time -->
       <div class="w-full xl:w-1/4">
-        <label for="at-input" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Check specific time</label>
+        <label for="at-input" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 ml-1">Check specific time</label>
         <div class="relative items-center">
-            <input type="datetime-local" name="at" id="at-input" value="{{ current_time|date:'Y-m-d' }}T{{ current_time|date:'H:i' }}" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm md:text-base text-gray-600 font-medium focus:outline-none focus:ring-2 focus:ring-must-blue/40 focus:border-must-blue shadow-sm transition-all" />
+            <input type="datetime-local" name="at" id="at-input" value="{{ current_time|date:'Y-m-d' }}T{{ current_time|date:'H:i' }}" class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm md:text-base text-gray-600 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-must-blue/40 focus:border-must-blue shadow-sm transition-all" />
         </div>
       </div>
       
       <!-- Action Buttons -->
       <div class="flex gap-3 w-full xl:w-auto xl:flex-1 shrink-0 pt-2 xl:pt-0">
-        <button type="submit" class="flex-1 justify-center bg-must-blue hover:bg-must-lightBlue active:scale-95 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-must-blue/50">
+        <button type="submit" class="flex-1 justify-center bg-must-blue dark:bg-blue-600 hover:bg-must-lightBlue dark:hover:bg-blue-500 active:scale-95 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-must-blue/50 dark:focus:ring-blue-500/50">
           Check Now
         </button>
-        <a href="{% url 'timetable' %}?building={{ selected_building|urlencode }}&course={{ selected_course|urlencode }}" class="flex items-center justify-center bg-white hover:bg-gray-50 active:scale-95 text-gray-700 px-5 py-2.5 rounded-xl text-sm font-bold border border-gray-200 shadow-sm transition-all">
+        <a href="{% url 'timetable' %}?building={{ selected_building|urlencode }}&course={{ selected_course|urlencode }}" class="flex items-center justify-center bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 active:scale-95 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl text-sm font-bold border border-gray-200 dark:border-slate-600 shadow-sm transition-all">
            🗂️ Grid
         </a>
       </div>
     </form>
 
     <!-- Stats Section -->
-    <div class="flex flex-wrap items-center gap-3 mt-6 pt-5 border-t border-gray-100">
-      <div class="flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-100 text-sm font-bold shadow-sm">
-        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+    <div class="flex flex-wrap items-center gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-slate-700">
+      <div class="flex items-center gap-1.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-1.5 rounded-lg border border-red-100 dark:border-red-900/50 text-sm font-bold shadow-sm">
+        <div class="w-2 h-2 rounded-full bg-red-500 dark:bg-red-400"></div>
         <span id="stat-occupied">{{ occupied_rooms|length }} Occupied</span>
       </div>
-      <div class="flex items-center gap-1.5 bg-green-50 text-must-green px-3 py-1.5 rounded-lg border border-green-100 text-sm font-bold shadow-sm">
-        <div class="w-2 h-2 rounded-full bg-must-green"></div>
+      <div class="flex items-center gap-1.5 bg-green-50 text-must-green dark:text-green-400 px-3 py-1.5 rounded-lg border border-green-100 text-sm font-bold shadow-sm">
+        <div class="w-2 h-2 rounded-full bg-must-green dark:bg-green-400"></div>
         <span id="stat-free">{{ free_rooms|length }} Free</span>
       </div>
-      <div class="flex items-center gap-1.5 bg-gray-50 text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-semibold shadow-sm">
+      <div class="flex items-center gap-1.5 bg-gray-50 dark:bg-slate-700 text-gray-500 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 text-sm font-semibold shadow-sm">
         <span id="stat-total">Total: {{ total_rooms }}</span>
       </div>
     </div>
@@ -133,97 +133,97 @@
       
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {% for m in searched_meetings %}
-        <div class="card-hover bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden min-h-[140px]">
+        <div class="card-hover bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden min-h-[140px]">
           <div class="absolute top-0 left-0 w-1.5 h-full bg-must-blue"></div>
           <div class="flex items-start justify-between gap-2">
             <div>
-              <h3 class="font-black text-gray-900 text-lg leading-none">{{ m.room }}</h3>
+              <h3 class="font-black text-gray-900 dark:text-white text-lg leading-none">{{ m.room }}</h3>
               <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1.5">{{ m.building }}</p>
             </div>
-            <span class="badge bg-blue-50 text-must-lightBlue shrink-0 border border-blue-100 font-bold px-2 py-1 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ m.start_time }} - {{ m.end_time }}</span>
+            <span class="badge bg-blue-50 dark:bg-blue-900/30 text-must-lightBlue dark:text-blue-400 shrink-0 border border-blue-100 dark:border-blue-900/50 font-bold px-2 py-1 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> {{ m.start_time }} - {{ m.end_time }}</span>
           </div>
-          <div class="bg-gray-50/80 rounded-xl p-3 border border-gray-100 mt-auto">
-            <p class="text-[0.65rem] font-black tracking-widest text-must-blue uppercase mb-1">{{ m.course_code }}</p>
-            <p class="text-sm font-semibold text-gray-700 leading-tight">{{ m.course_title }}</p>
+          <div class="bg-gray-50/80 dark:bg-slate-700/80 rounded-xl p-3 border border-gray-100 dark:border-slate-600 mt-auto">
+            <p class="text-[0.65rem] font-black tracking-widest text-must-blue dark:text-blue-400 uppercase mb-1">{{ m.course_code }}</p>
+            <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 leading-tight">{{ m.course_title }}</p>
           </div>
         </div>
         {% empty %}
-        <div class="col-span-full py-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-dashed border-gray-300">
-          <h3 class="text-gray-900 text-lg font-bold">No classes found</h3>
-          <p class="text-sm text-gray-500 mt-1">This course does not have any scheduled classes today.</p>
+        <div class="col-span-full py-16 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+          <h3 class="text-gray-900 dark:text-white text-lg font-bold">No classes found</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">This course does not have any scheduled classes today.</p>
         </div>
         {% endfor %}
       </div>
     </section>
     {% else %}
 
-    <!-- Occupied Rooms -->
-    <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
-      <div class="flex items-center gap-3 px-1">
-        <h2 class="text-sm font-black uppercase tracking-widest text-red-600">Occupied Rooms</h2>
-        <div class="h-[1px] bg-gray-200 flex-grow"></div>
-      </div>
-      
-      <div id="occupied-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {% for r in occupied_rooms %}
-        <div class="card-hover bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden group min-h-[140px]">
-          <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <h3 class="font-black text-gray-900 text-lg md:text-xl leading-none flex items-center gap-2">
-                {{ r.room }}
-              </h3>
-              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1.5">{{ r.building }}</p>
-            </div>
-            <span class="badge bg-red-50 text-red-600 shrink-0 border border-red-100 font-bold px-2 py-1">Free at {{ r.end_time }}</span>
-          </div>
-          <div class="bg-gray-50/80 rounded-xl p-3 border border-gray-100 mt-auto">
-            <p class="text-[0.65rem] font-black tracking-widest text-must-blue uppercase mb-1">{{ r.course_code|default:"Course" }}</p>
-            <p class="text-sm font-semibold text-gray-700 leading-tight">{{ r.course_title }}</p>
-          </div>
-        </div>
-        {% empty %}
-        <div class="col-span-full py-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-dashed border-gray-300">
-          <div class="text-4xl mb-4 opacity-50 grayscale">🙌</div>
-          <h3 class="text-gray-900 text-lg font-bold">No occupied rooms</h3>
-          <p class="text-sm text-gray-500 mt-1">Everything is free based on your filters.</p>
-        </div>
-        {% endfor %}
-      </div>
-    </section>
-
     <!-- Free Rooms (Hidden if searching specifically for a course to avoid confusion) -->
     {% if not selected_course %}
     <section class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
       <div class="flex items-center gap-3 px-1">
-        <h2 class="text-sm font-black uppercase tracking-widest text-must-green">Available Now</h2>
+        <h2 class="text-sm font-black uppercase tracking-widest text-must-green dark:text-green-400">Available Now</h2>
         <div class="h-[1px] bg-gray-200 flex-grow"></div>
       </div>
 
       <div id="free-list" class="grid grid-cols-2 lg:grid-cols-1 gap-3">
         {% for r in free_rooms %}
-        <div class="card-hover bg-white border border-green-100/50 rounded-2xl p-4 shadow-sm flex items-center justify-between group">
+        <div class="card-hover bg-white dark:bg-slate-800 border border-green-100/50 dark:border-green-900/30 rounded-2xl p-4 shadow-sm flex items-center justify-between group">
           <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shrink-0 border border-green-100/60 group-hover:bg-must-green group-hover:text-white group-hover:border-must-green transition-colors">
-              <svg class="w-5 h-5 text-must-green group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            <div class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/30 flex items-center justify-center shrink-0 border border-green-100/60 dark:border-green-800/50 group-hover:bg-must-green group-hover:text-white group-hover:border-must-green transition-colors">
+              <svg class="w-5 h-5 text-must-green dark:text-green-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
             </div>
             <div>
               <h3 class="font-black text-gray-900 leading-tight text-base">{{ r.room }}</h3>
               <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-0.5">{{ r.building }}</p>
             </div>
           </div>
-          <span class="badge bg-green-50 text-must-green shrink-0 border border-green-100 font-bold px-2 py-1">Free till {{ r.free_till }}</span>
+          <span class="badge bg-green-50 text-must-green dark:text-green-400 shrink-0 border border-green-100 font-bold px-2 py-1">Free till {{ r.free_till }}</span>
         </div>
         {% empty %}
-        <div class="col-span-full py-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-dashed border-gray-300">
+        <div class="col-span-full py-16 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
            <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f633/512.gif" alt="Surprised" class="w-12 h-12 mb-4 opacity-70">
-          <h3 class="text-gray-900 text-lg font-bold">Absolutely zero</h3>
-          <p class="text-sm text-gray-500 mt-1 text-center px-4">Every single room is occupied right now.</p>
+          <h3 class="text-gray-900 dark:text-white text-lg font-bold">Absolutely zero</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center px-4">Every single room is occupied right now.</p>
         </div>
         {% endfor %}
       </div>
     </section>
     {% endif %}
+
+    <!-- Occupied Rooms -->
+    <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+      <div class="flex items-center gap-3 px-1">
+        <h2 class="text-sm font-black uppercase tracking-widest text-red-600 dark:text-red-400">Occupied Rooms</h2>
+        <div class="h-[1px] bg-gray-200 flex-grow"></div>
+      </div>
+      
+      <div id="occupied-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for r in occupied_rooms %}
+        <div class="card-hover bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden group min-h-[140px]">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500 dark:bg-red-400"></div>
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <h3 class="font-black text-gray-900 dark:text-white text-lg md:text-xl leading-none flex items-center gap-2">
+                {{ r.room }}
+              </h3>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1.5">{{ r.building }}</p>
+            </div>
+            <span class="badge bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0 border border-red-100 dark:border-red-900/50 font-bold px-2 py-1">Free at {{ r.end_time }}</span>
+          </div>
+          <div class="bg-gray-50/80 dark:bg-slate-700/80 rounded-xl p-3 border border-gray-100 dark:border-slate-600 mt-auto">
+            <p class="text-[0.65rem] font-black tracking-widest text-must-blue dark:text-blue-400 uppercase mb-1">{{ r.course_code|default:"Course" }}</p>
+            <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 leading-tight">{{ r.course_title }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-16 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+          <div class="text-4xl mb-4 opacity-50 grayscale">🙌</div>
+          <h3 class="text-gray-900 dark:text-white text-lg font-bold">No occupied rooms</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Everything is free based on your filters.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
 
     {% endif %}
   </div>
