@@ -103,8 +103,15 @@ def dashboard(request):
     now_dt = get_egypt_now(request)
     building_filter = request.GET.get('building', '').strip()
     course_filter = request.GET.get('course', '').strip()
+    status_filter = request.GET.get('status', '').strip().lower()
 
     occupied_rooms, free_rooms = get_room_status(now_dt, building_filter or None, course_filter or None)
+    
+    if status_filter == 'free':
+        occupied_rooms = []
+    elif status_filter == 'occupied':
+        free_rooms = []
+
     buildings = get_all_buildings()
     
     searched_meetings = []
@@ -149,6 +156,7 @@ def dashboard(request):
         'buildings': buildings,
         'selected_building': building_filter,
         'selected_course': course_filter,
+        'selected_status': status_filter,
     }
     return render(request, 'halls/dashboard.html', context)
 
