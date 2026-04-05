@@ -88,7 +88,7 @@
         <label for="building-select" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 ml-1">Filter by building</label>
         <div class="relative">
           <select name="building" id="building-select" onchange="this.form.submit()" class="w-full appearance-none bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm md:text-base text-gray-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-must-blue/40 dark:focus:ring-blue-500 focus:border-must-blue dark:focus:border-blue-500 transition-all cursor-pointer shadow-sm">
-            <option value="">🏢 All Buildings</option>
+            <option value="">All Buildings</option>
             {% for b in buildings %}
               <option value="{{ b }}" {% if b == selected_building %}selected{% endif %}>{{ b }}</option>
             {% endfor %}
@@ -183,14 +183,14 @@
     {% else %}
 
     <!-- Free Rooms (Hidden if searching specifically for a course to avoid confusion) -->
-    {% if not selected_course %}
-    <section class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
+    {% if not selected_course and selected_status != 'occupied' %}
+    <section class="{% if selected_status == 'free' %}lg:col-span-12{% else %}lg:col-span-5 xl:col-span-4{% endif %} flex flex-col gap-4">
       <div class="flex items-center gap-3 px-1">
         <h2 class="text-sm font-black uppercase tracking-widest text-must-green dark:text-green-400">Available Now</h2>
         <div class="h-[1px] bg-gray-200 flex-grow"></div>
       </div>
 
-      <div id="free-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+      <div id="free-list" class="grid grid-cols-1 sm:grid-cols-2 {% if selected_status == 'free' %}md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5{% else %}lg:grid-cols-1{% endif %} gap-3">
         {% for r in free_rooms %}
         <div class="card-hover bg-white dark:bg-slate-800 border border-green-100/50 dark:border-green-900/30 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group">
           <div class="flex items-center gap-4">
@@ -216,13 +216,14 @@
     {% endif %}
 
     <!-- Occupied Rooms -->
-    <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-4">
+    {% if selected_status != 'free' %}
+    <section class="{% if selected_status == 'occupied' %}lg:col-span-12{% else %}lg:col-span-7 xl:col-span-8{% endif %} flex flex-col gap-4">
       <div class="flex items-center gap-3 px-1">
         <h2 class="text-sm font-black uppercase tracking-widest text-red-600 dark:text-red-400">Occupied Rooms</h2>
         <div class="h-[1px] bg-gray-200 flex-grow"></div>
       </div>
       
-      <div id="occupied-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div id="occupied-list" class="grid grid-cols-1 sm:grid-cols-2 {% if selected_status == 'occupied' %}md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5{% endif %} gap-4">
         {% for r in occupied_rooms %}
         <div class="card-hover bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl p-5 flex flex-col gap-4 shadow-sm relative overflow-hidden group min-h-[140px]">
           <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500 dark:bg-red-400"></div>
@@ -249,6 +250,7 @@
         {% endfor %}
       </div>
     </section>
+    {% endif %}
 
     {% endif %}
   </div>

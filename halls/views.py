@@ -93,7 +93,7 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
 def get_all_buildings():
     return (
         MeetingTime.objects
-        .exclude(building='')
+        .exclude(building__in=['', '1'])
         .values_list('building', flat=True)
         .distinct()
         .order_by('building')
@@ -222,7 +222,7 @@ def timetable(request):
     context = {
         'selected_day': day,
         'day_names': day_names,
-        'time_slots': [t.strftime('%H:%M') for t in time_slots],
+        'time_slots': [t.strftime('%I:%M %p').lstrip('0') for t in time_slots],
         'grid_data': grid_data,
         'buildings': get_all_buildings(),
         'selected_building': building_filter,
