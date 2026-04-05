@@ -80,7 +80,13 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
                 occupied_rooms.append(occ_data)
         else:
             if not course_filter:
-                free_rooms.append({'building': building, 'room': room})
+                future = [m for m in meetings if m.start_time > now_time]
+                if future:
+                    next_meeting = min(future, key=lambda m: m.start_time)
+                    free_till = next_meeting.start_time.strftime('%H:%M')
+                else:
+                    free_till = 'End of Day'
+                free_rooms.append({'building': building, 'room': room, 'free_till': free_till})
 
     return occupied_rooms, free_rooms
 
@@ -104,6 +110,7 @@ def dashboard(request):
     context = {
         'occupied_rooms': occupied_rooms,
         'free_rooms': free_rooms,
+        'total_rooms': len(occupied_rooms) + len(free_rooms),
         'current_time': now_dt,
         'buildings': buildings,
         'selected_building': building_filter,
@@ -189,7 +196,7 @@ def api_free_rooms(request):
 
     return JsonResponse({
         'as_of': now_dt.isoformat(),
-        'free': [{'building': r['building'], 'room': r['room']} for r in free_rooms],
+        'free': [{'building': r['building'], 'room': r['room'], 'free_till': r['free_till']} for r in free_rooms],
         'occupied': [
             {
                 'building': r['building'],
