@@ -70,7 +70,7 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
                 'room': room,
                 'course_title': latest.course.title,
                 'course_code': f"{latest.course.subject} {latest.course.course_number}".strip(),
-                'end_time': latest.end_time.strftime('%H:%M'),
+                'end_time': latest.end_time.strftime('%I:%M %p').lstrip('0'),
             }
             if course_filter:
                 q = course_filter.lower()
@@ -83,7 +83,7 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
                 future = [m for m in meetings if m.start_time > now_time]
                 if future:
                     next_meeting = min(future, key=lambda m: m.start_time)
-                    free_till = next_meeting.start_time.strftime('%H:%M')
+                    free_till = next_meeting.start_time.strftime('%I:%M %p').lstrip('0')
                 else:
                     free_till = 'End of Day'
                 free_rooms.append({'building': building, 'room': room, 'free_till': free_till})
@@ -106,11 +106,45 @@ def dashboard(request):
 
     occupied_rooms, free_rooms = get_room_status(now_dt, building_filter or None, course_filter or None)
     buildings = get_all_buildings()
+    
+    searched_meetings = []
+    if course_filter:
+        from django.db.models import Q
+        weekday_field = WEEKDAY_FIELD[now_dt.weekday()]
+        today = now_dt.date()
+        filter_kwargs = {
+            weekday_field: True,
+            'start_time__isnull': False,
+            'end_time__isnull': False,
+            'start_date__lte': today,
+            'end_date__gte': today,
+        }
+        if building_filter:
+            filter_kwargs['building__icontains'] = building_filter
+            
+        q_meetings = MeetingTime.objects.filter(**filter_kwargs).exclude(building='', room='').exclude(schedule_type__icontains='Exam').select_related('course')
+        
+        q_meetings = q_meetings.filter(
+            Q(course__subject__icontains=course_filter) | 
+            Q(course__course_number__icontains=course_filter) |
+            Q(course__title__icontains=course_filter)
+        ).order_by('start_time')
+        
+        for m in q_meetings:
+            searched_meetings.append({
+                'building': m.building,
+                'room': m.room,
+                'course_title': m.course.title,
+                'course_code': f"{m.course.subject} {m.course.course_number}".strip(),
+                'start_time': m.start_time.strftime('%I:%M %p').lstrip('0'),
+                'end_time': m.end_time.strftime('%I:%M %p').lstrip('0'),
+            })
 
     context = {
         'occupied_rooms': occupied_rooms,
         'free_rooms': free_rooms,
         'total_rooms': len(occupied_rooms) + len(free_rooms),
+        'searched_meetings': searched_meetings,
         'current_time': now_dt,
         'buildings': buildings,
         'selected_building': building_filter,
