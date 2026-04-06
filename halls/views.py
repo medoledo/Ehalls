@@ -65,6 +65,7 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
         current = [m for m in meetings if m.start_time <= now_time <= m.end_time]
         if current:
             latest = max(current, key=lambda m: m.end_time)
+            s_type = latest.schedule_type or latest.course.schedule_type or "Lecture"
             occ_data = {
                 'building': building,
                 'room': room,
@@ -72,6 +73,7 @@ def get_room_status(now_dt, building_filter=None, course_filter=None):
                 'course_code': f"{latest.course.subject} {latest.course.course_number}".strip(),
                 'end_time': latest.end_time.strftime('%I:%M %p').lstrip('0'),
                 'raw_end_time': latest.end_time,
+                'type': s_type,
             }
             if course_filter:
                 q = course_filter.lower()
