@@ -138,19 +138,29 @@ def dashboard(request):
         if building_filter:
             q_meetings = q_meetings.filter(building__icontains=building_filter)
             
-        q_meetings = q_meetings.filter(
-            Q(course__subject__icontains=course_filter) | 
-            Q(course__course_number__icontains=course_filter) |
+        from django.db.models.functions import Concat
+        from django.db.models import Value
+        
+        q_clean = course_filter.replace(' ', '').lower()
+        
+        q_meetings = q_meetings.annotate(
+            search_code=Concat('course__subject', Value(''), 'course__course_number')
+        ).filter(
+            Q(search_code__icontains=q_clean) |
             Q(course__title__icontains=course_filter)
         ).order_by('start_time')
         
         day_names = [('monday', 'Mon'), ('tuesday', 'Tue'), ('wednesday', 'Wed'), ('thursday', 'Thu'), ('friday', 'Fri'), ('saturday', 'Sat'), ('sunday', 'Sun')]
+        today_field = day_names[now_dt.weekday()][0]
+        
+        searched_meetings_today = []
+        searched_meetings_week = []
         for m in q_meetings:
             days_active = [abbr for field, abbr in day_names if getattr(m, field, False)]
             days_str = ", ".join(days_active) if days_active else "TBA"
             s_type = m.schedule_type or m.course.schedule_type or "Lecture"
             
-            searched_meetings.append({
+            data = {
                 'building': m.building,
                 'room': m.room,
                 'course_title': m.course.title,
@@ -159,13 +169,22 @@ def dashboard(request):
                 'end_time': m.end_time.strftime('%I:%M %p').lstrip('0') if m.end_time else 'TBA',
                 'days': days_str,
                 'type': s_type,
-            })
+                'raw_start': m.start_time,
+            }
+            if getattr(m, today_field, False):
+                searched_meetings_today.append(data)
+            else:
+                searched_meetings_week.append(data)
+                
+        searched_meetings_today.sort(key=lambda x: x['raw_start'])
+        searched_meetings_week.sort(key=lambda x: x['raw_start'])
 
     context = {
         'occupied_rooms': occupied_rooms,
         'free_rooms': free_rooms,
         'total_rooms': len(occupied_rooms) + len(free_rooms),
-        'searched_meetings': searched_meetings,
+        'searched_meetings_today': searched_meetings_today if course_filter else [],
+        'searched_meetings_week': searched_meetings_week if course_filter else [],
         'current_time': now_dt,
         'buildings': buildings,
         'selected_building': building_filter,
