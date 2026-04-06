@@ -133,34 +133,32 @@ def dashboard(request):
     searched_meetings = []
     if course_filter:
         from django.db.models import Q
-        weekday_field = WEEKDAY_FIELD[now_dt.weekday()]
-        today = now_dt.date()
-        filter_kwargs = {
-            weekday_field: True,
-            'start_time__isnull': False,
-            'end_time__isnull': False,
-            'start_date__lte': today,
-            'end_date__gte': today,
-        }
-        if building_filter:
-            filter_kwargs['building__icontains'] = building_filter
-            
-        q_meetings = MeetingTime.objects.filter(**filter_kwargs).exclude(building='', room='').exclude(schedule_type__icontains='Exam').select_related('course')
+        q_meetings = MeetingTime.objects.exclude(building='', room='').exclude(schedule_type__icontains='Exam').select_related('course')
         
+        if building_filter:
+            q_meetings = q_meetings.filter(building__icontains=building_filter)
+            
         q_meetings = q_meetings.filter(
             Q(course__subject__icontains=course_filter) | 
             Q(course__course_number__icontains=course_filter) |
             Q(course__title__icontains=course_filter)
         ).order_by('start_time')
         
+        day_names = [('monday', 'Mon'), ('tuesday', 'Tue'), ('wednesday', 'Wed'), ('thursday', 'Thu'), ('friday', 'Fri'), ('saturday', 'Sat'), ('sunday', 'Sun')]
         for m in q_meetings:
+            days_active = [abbr for field, abbr in day_names if getattr(m, field, False)]
+            days_str = ", ".join(days_active) if days_active else "TBA"
+            s_type = m.schedule_type or m.course.schedule_type or "Lecture"
+            
             searched_meetings.append({
                 'building': m.building,
                 'room': m.room,
                 'course_title': m.course.title,
                 'course_code': f"{m.course.subject} {m.course.course_number}".strip(),
-                'start_time': m.start_time.strftime('%I:%M %p').lstrip('0'),
-                'end_time': m.end_time.strftime('%I:%M %p').lstrip('0'),
+                'start_time': m.start_time.strftime('%I:%M %p').lstrip('0') if m.start_time else 'TBA',
+                'end_time': m.end_time.strftime('%I:%M %p').lstrip('0') if m.end_time else 'TBA',
+                'days': days_str,
+                'type': s_type,
             })
 
     context = {
