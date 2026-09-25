@@ -1,13 +1,16 @@
 """
 Management command: scrape_courses
 Fetches all courses and meeting times from register.must.edu.eg and saves them to the DB.
+
+Usage:
+    python manage.py scrape_courses                 # scrape the active registration term
+    python manage.py scrape_courses --term 202710   # scrape an explicit term
+    python manage.py scrape_courses --keep-old      # keep courses from other terms
 """
-import time
-import warnings
 import requests
 import urllib3
-from datetime import datetime, time as dt_time, date
-from django.core.management.base import BaseCommand
+from datetime import datetime, time as dt_time
+from django.core.management.base import BaseCommand, CommandError
 from halls.models import Course, MeetingTime
 
 # MUST's server uses a self-signed / local-issuer SSL cert; suppress warnings
@@ -51,32 +54,40 @@ def parse_date(d_str):
     return None
 
 
-def get_session_and_term():
-    """Create a requests Session, discover the Spring/2026 term code, and initialize the session."""
+def get_session_and_term(term_code=None):
+    """Create a requests Session, resolve the term code, and initialize the session."""
     session = requests.Session()
     session.headers.update(HEADERS)
 
-    # Phase 2: Get term code
+    # Phase 2: Resolve term code
     print("Fetching term list...")
     resp = session.get(
         f"{BASE_URL}/classSearch/getTerms",
-        params={"offset": 1, "max": 10},
+        params={"offset": 1, "max": 20},
         timeout=30,
         verify=False,
     )
     resp.raise_for_status()
     terms = resp.json()
-    term_code = None
-    for t in terms:
-        desc = t.get("description", "")
-        if "Spring" in desc and "2026" in desc:
-            term_code = t["code"]
-            print(f"Found term: {desc} => code={term_code}")
-            break
+    if not terms:
+        raise CommandError("Registration API returned no terms.")
+
     if not term_code:
-        # Fall back to first term
-        term_code = terms[0]["code"]
-        print(f"Spring/2026 not found, using first term: {terms[0].get('description')} => {term_code}")
+        # The active registration term is the first one not marked "View Only"
+        for t in terms:
+            if "View Only" not in t.get("description", ""):
+                term_code = t["code"]
+                print(f"Active term: {t.get('description')} => code={term_code}")
+                break
+        else:
+            term_code = terms[0]["code"]
+            print(f"No active term found, using first: {terms[0].get('description')} => {term_code}")
+
+    known = {t["code"]: t.get("description", "") for t in terms}
+    if term_code not in known:
+        print(f"Warning: term {term_code} not in the advertised term list; trying anyway.")
+    else:
+        print(f"Scraping term {term_code} ({known[term_code]})")
 
     # Phase 3: Initialize session
     print(f"Initializing session for term {term_code}...")
@@ -111,7 +122,7 @@ def fetch_subjects(session, term_code):
 def fetch_sections_for_subject(session, term_code, subject_code):
     """Paginate through all sections for a given subject."""
     # Reset banner server-side search cache
-    session.post(f"{BASE_URL}/classSearch/resetDataForm", verify=False)
+    session.post(f"{BASE_URL}/classSearch/resetDataForm", timeout=30, verify=False)
     
     sections = []
     page_offset = 0
@@ -148,18 +159,35 @@ def fetch_sections_for_subject(session, term_code, subject_code):
 class Command(BaseCommand):
     help = "Scrape all courses and meeting times from register.must.edu.eg"
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--term",
+            dest="term",
+            default=None,
+            help="Term code to scrape (e.g. 202710). Defaults to the active registration term.",
+        )
+        parser.add_argument(
+            "--keep-old",
+            action="store_true",
+            help="Do not delete courses from other terms after a successful scrape.",
+        )
+
     def handle(self, *args, **options):
-        session, term_code = get_session_and_term()
+        session, term_code = get_session_and_term(options.get("term"))
         subjects = fetch_subjects(session, term_code)
+        if not subjects:
+            raise CommandError("No subjects returned for this term; aborting without touching the DB.")
 
         total_courses = 0
         total_meetings = 0
+        failed_subjects = []
 
         for subject_code in subjects:
             try:
                 sections = fetch_sections_for_subject(session, term_code, subject_code)
             except Exception as exc:
                 self.stderr.write(f"  ERROR fetching {subject_code}: {exc}")
+                failed_subjects.append(subject_code)
                 continue
 
             subject_courses = 0
@@ -244,6 +272,23 @@ class Command(BaseCommand):
             total_meetings += subject_meetings
             print(f"  Subject {subject_code}: {subject_courses} sections, {subject_meetings} meetings")
 
+        if failed_subjects:
+            self.stderr.write(self.style.WARNING(
+                f"{len(failed_subjects)} subject(s) failed: {', '.join(failed_subjects)}"
+            ))
+            self.stderr.write("Skipping cleanup of other terms because this scrape is incomplete.")
+        elif total_courses and not options.get("keep_old"):
+            stale_qs = Course.objects.exclude(term=term_code)
+            stale_courses = stale_qs.count()
+            stale_meetings = MeetingTime.objects.filter(course__in=stale_qs).count()
+            stale_qs.delete()
+            print(f"Removed {stale_courses} stale courses / {stale_meetings} meetings from other terms.")
+        elif options.get("keep_old"):
+            print("Keeping courses from other terms (--keep-old).")
+
         self.stdout.write(self.style.SUCCESS(
-            f"\n=== DONE ===\nTotal courses saved: {total_courses}\nTotal meeting times saved: {total_meetings}"
+            f"\n=== DONE (term {term_code}) ===\n"
+            f"Total courses saved: {total_courses}\n"
+            f"Total meeting times saved: {total_meetings}\n"
+            f"Failed subjects: {len(failed_subjects)}"
         ))
