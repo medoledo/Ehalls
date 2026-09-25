@@ -54,6 +54,16 @@ def parse_date(d_str):
     return None
 
 
+def parse_faculty(faculty_list):
+    """Join all instructor names (whitespace-normalized) into a single string."""
+    names = []
+    for f in faculty_list or []:
+        name = " ".join((f.get("displayName") or "").split())
+        if name:
+            names.append(name)
+    return ", ".join(names)[:200]
+
+
 def get_session_and_term(term_code=None):
     """Create a requests Session, resolve the term code, and initialize the session."""
     session = requests.Session()
@@ -208,12 +218,8 @@ class Command(BaseCommand):
                 seats_available = int(sec.get("seatsAvailable") or 0)
                 max_enrollment = int(sec.get("maximumEnrollment") or 0)
 
-                # Instructor (may be nested)
-                instructor = ""
-                faculty_list = sec.get("faculty") or []
-                if faculty_list:
-                    name = faculty_list[0].get("displayName") or ""
-                    instructor = name
+                # Instructors (may be nested; keep all of them)
+                instructor = parse_faculty(sec.get("faculty"))
 
                 course_obj, _ = Course.objects.update_or_create(
                     crn=crn,

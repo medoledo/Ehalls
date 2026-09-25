@@ -20,6 +20,51 @@ WEEKDAY_FIELD = {
     6: 'sunday',
 }
 
+DAY_ABBR = [
+    ('monday', 'Mon'),
+    ('tuesday', 'Tue'),
+    ('wednesday', 'Wed'),
+    ('thursday', 'Thu'),
+    ('friday', 'Fri'),
+    ('saturday', 'Sat'),
+    ('sunday', 'Sun'),
+]
+
+DAY_NAMES = [
+    ('monday', 'Monday'),
+    ('tuesday', 'Tuesday'),
+    ('wednesday', 'Wednesday'),
+    ('thursday', 'Thursday'),
+    ('friday', 'Friday'),
+    ('saturday', 'Saturday'),
+    ('sunday', 'Sunday'),
+]
+
+
+def normalize_query(text):
+    """Collapse repeated whitespace so searches survive messy input/DB values."""
+    return " ".join((text or "").split())
+
+
+def get_meeting_type(meeting):
+    return meeting.schedule_type or meeting.course.schedule_type or "Lecture"
+
+
+def serialize_meeting(meeting):
+    days_active = [abbr for field, abbr in DAY_ABBR if getattr(meeting, field, False)]
+    return {
+        'building': meeting.building or 'TBA',
+        'room': meeting.room or 'TBA',
+        'course_title': meeting.course.title,
+        'course_code': f"{meeting.course.subject} {meeting.course.course_number}".strip(),
+        'days': ", ".join(days_active) if days_active else "TBA",
+        'start_time': meeting.start_time.strftime('%I:%M %p').lstrip('0') if meeting.start_time else 'TBA',
+        'end_time': meeting.end_time.strftime('%I:%M %p').lstrip('0') if meeting.end_time else 'TBA',
+        'type': get_meeting_type(meeting),
+        'raw_start': meeting.start_time,
+        'raw_end': meeting.end_time,
+    }
+
 def get_egypt_now(request):
     at_param = request.GET.get('at', '')
     if at_param:
@@ -294,3 +339,116 @@ def api_free_rooms(request):
             for r in occupied_rooms
         ],
     })
+
+
+def api_instructors(request):
+    """Autocomplete endpoint: distinct instructor names matching the query."""
+    q = normalize_query(request.GET.get('q', ''))
+    if len(q) < 2:
+        return JsonResponse({'results': [], 'count': 0})
+
+    names = set()
+    joined_names = (
+        MeetingTime.objects
+        .exclude(course__instructor='')
+        .values_list('course__instructor', flat=True)
+        .distinct()
+    )
+    for joined in joined_names:
+        for part in joined.split(','):
+            part = normalize_query(part)
+            if part:
+                names.add(part)
+
+    q_lower = q.lower()
+    matches = sorted(name for name in names if q_lower in name.lower())
+    return JsonResponse({'results': matches[:10], 'count': len(matches)})
+
+
+def instructor_locator(request):
+    now_dt = get_egypt_now(request)
+    name = normalize_query(request.GET.get('name', ''))
+    weekday_field = WEEKDAY_FIELD[now_dt.weekday()]
+    today = now_dt.date()
+    now_time = now_dt.time()
+
+    current_class = None
+    next_class = None
+    today_meetings = []
+    weekly_schedule = []
+    matched_instructors = []
+
+    if name:
+        base = (
+            MeetingTime.objects
+            .filter(course__instructor__icontains=name)
+            .filter(
+                start_time__isnull=False,
+                end_time__isnull=False,
+                start_date__lte=today,
+                end_date__gte=today,
+            )
+            .exclude(schedule_type__icontains='Exam')
+            .select_related('course')
+        )
+
+        # Disambiguate people who share part of the same name
+        name_lower = name.lower()
+        matched_counts: dict = {}
+        for joined in base.values_list('course__instructor', flat=True).distinct():
+            for part in joined.split(','):
+                part = normalize_query(part)
+                if part and name_lower in part.lower():
+                    matched_counts[part] = matched_counts.get(part, 0) + 1
+        matched_instructors = [
+            {'name': person, 'count': count}
+            for person, count in sorted(matched_counts.items(), key=lambda kv: (-kv[1], kv[0]))
+        ]
+
+        # Today's classes
+        meetings_today = list(base.filter(**{weekday_field: True}).order_by('start_time'))
+        today_meetings = [serialize_meeting(m) for m in meetings_today]
+
+        ongoing = [m for m in meetings_today if m.start_time <= now_time <= m.end_time]
+        if ongoing:
+            current_class = serialize_meeting(max(ongoing, key=lambda m: m.end_time))
+
+        upcoming = [m for m in meetings_today if m.start_time > now_time]
+        if upcoming:
+            next_class = serialize_meeting(min(upcoming, key=lambda m: m.start_time))
+        elif not current_class:
+            # Look ahead through the rest of the week
+            for offset in range(1, 7):
+                wd = (now_dt.weekday() + offset) % 7
+                field = WEEKDAY_FIELD[wd]
+                candidate = base.filter(**{field: True}).order_by('start_time').first()
+                if candidate:
+                    next_class = serialize_meeting(candidate)
+                    next_class['day_label'] = DAY_NAMES[wd][1]
+                    break
+
+        # Full week grouped by day
+        week_map: dict = {field: [] for field, _ in DAY_NAMES}
+        for m in base.order_by('start_time'):
+            data = serialize_meeting(m)
+            for field, _ in DAY_NAMES:
+                if getattr(m, field, False):
+                    week_map[field].append(data)
+        weekly_schedule = [
+            {'day': label, 'day_field': field, 'is_today': field == weekday_field, 'meetings': week_map[field]}
+            for field, label in DAY_NAMES
+            if week_map[field]
+        ]
+
+    context = {
+        'current_time': now_dt,
+        'selected_name': name,
+        'searched': bool(name),
+        'current_class': current_class,
+        'next_class': next_class,
+        'today_meetings': today_meetings,
+        'weekly_schedule': weekly_schedule,
+        'matched_instructors': matched_instructors,
+        'today_label': DAY_NAMES[now_dt.weekday()][1],
+    }
+    return render(request, 'halls/instructor.html', context)

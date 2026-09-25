@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MUST Hall Finder — Instructor Locator</title>
+  <meta name="description" content="Find where a MUST instructor is right now: current hall, room and weekly schedule." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            must: {
+              blue: '#1b365d',
+              lightBlue: '#2a538d',
+              green: '#00b050',
+              darkGreen: '#008a3f'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <script>
+    if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark')
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01); }
+    .badge { display: inline-flex; align-items: center; justify-content: center; padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.70rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  </style>
+
+  <script defer src="http://148.230.125.24:32768/script.js" data-website-id="14d6dda1-ec65-4710-a060-1b171b2f2cae"></script>
+</head>
+<body class="bg-[#f6f8fb] text-gray-800 dark:bg-slate-900 dark:text-gray-200 min-h-screen antialiased flex flex-col transition-colors duration-300">
+
+<header class="sticky top-0 z-50 bg-must-blue dark:bg-slate-900 border-b border-must-lightBlue dark:border-slate-800 shadow transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-4 w-full sm:w-auto">
+      <div class="w-11 h-11 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 shadow-sm text-must-blue dark:text-blue-400">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      </div>
+      <div>
+        <a href="{% url 'dashboard' %}"><h1 class="text-lg font-bold text-white leading-tight tracking-tight hover:text-must-green transition-colors">Instructor Locator</h1></a>
+        <p class="text-xs font-medium text-blue-200 dark:text-slate-400">MUST Hall Finder</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+      <a href="{% url 'dashboard' %}" class="flex items-center gap-2 min-h-[44px] text-sm font-bold text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 border border-must-lightBlue/50 dark:border-slate-700 rounded-lg px-4 py-2.5 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Halls
+      </a>
+      <a href="{% url 'timetable' %}" class="hidden sm:flex items-center gap-2 min-h-[44px] text-sm font-bold text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 border border-must-lightBlue/50 dark:border-slate-700 rounded-lg px-4 py-2.5 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+        Grid
+      </a>
+      <button id="theme-toggle" onclick="toggleTheme()" class="text-gray-300 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-slate-700/50 focus:outline-none rounded-lg text-xl p-1.5 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+      </button>
+      <div class="text-right">
+        <div id="live-clock" class="text-base sm:text-lg font-mono font-bold text-must-green dark:text-green-400 tabular-nums leading-none"></div>
+        <div id="live-date"  class="text-[0.65rem] font-semibold text-blue-200 dark:text-slate-400 mt-1 uppercase tracking-widest"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
+  <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-slate-700 p-5 w-full">
+    <form method="GET" class="flex flex-col lg:flex-row flex-wrap gap-5 items-start lg:items-end w-full" id="instructor-form" autocomplete="off">
+
+      <!-- Instructor name -->
+      <div class="w-full lg:flex-[2] relative">
+        <label for="instructor-input" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 ml-1">Instructor name</label>
+        <div class="relative">
+          <input type="text" name="name" id="instructor-input" placeholder="Start typing a name (e.g. Mostafa, نسمة)" value="{{ selected_name }}"
+                 class="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-2.5 pl-10 text-base text-gray-900 dark:text-white font-medium placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-must-blue/40 focus:border-must-blue shadow-sm transition-all" />
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 dark:text-gray-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <div id="suggestions" class="hidden absolute z-30 mt-2 w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-lg overflow-hidden max-h-72 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- Specific time -->
+      <div class="w-full lg:flex-1">
+        <label for="at-input" class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 ml-1">Check specific time</label>
+        <input type="datetime-local" name="at" id="at-input" value="{{ current_time|date:'Y-m-d' }}T{{ current_time|date:'H:i' }}"
+               class="w-full bg-gray-50 dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-base text-gray-600 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-must-blue/40 focus:border-must-blue shadow-sm transition-all" />
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 w-full xl:w-auto shrink-0 pt-2 xl:pt-0">
+        <button type="submit" class="flex-1 min-h-[44px] justify-center bg-must-blue dark:bg-blue-600 hover:bg-must-lightBlue dark:hover:bg-blue-500 active:scale-95 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-must-blue/50 dark:focus:ring-blue-500/50">
+          Locate
+        </button>
+        <a href="{% url 'instructor' %}" class="flex items-center justify-center min-h-[44px] bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 active:scale-95 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 shadow-sm transition-all focus:outline-none font-bold text-sm">
+          Reset
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 pb-20 w-full flex-grow mt-2">
+  {% if searched %}
+
+    {% if not current_class and not next_class and not weekly_schedule %}
+      <div class="py-16 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+        <h3 class="text-gray-900 dark:text-white text-lg font-bold">No classes found</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center px-4">No scheduled classes match "{{ selected_name }}" for this term.</p>
+      </div>
+    {% else %}
+
+      <!-- Matched names -->
+      {% if matched_instructors|length > 1 %}
+      <div class="flex flex-wrap items-center gap-2 mb-6">
+        <span class="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">Matches:</span>
+        {% for i in matched_instructors %}
+          <a href="?name={{ i.name|urlencode }}&at={{ current_time|date:'Y-m-d' }}T{{ current_time|date:'H:i' }}"
+             class="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-must-lightBlue text-gray-700 dark:text-gray-200 rounded-full px-3.5 py-1.5 text-xs font-bold shadow-sm transition-colors">
+            {{ i.name }}
+            <span class="badge bg-blue-50 dark:bg-blue-900/30 text-must-lightBlue dark:text-blue-400">{{ i.count }}</span>
+          </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Status card -->
+      <section class="mb-8">
+        {% if current_class %}
+        <div class="card-hover bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 rounded-2xl p-4 sm:p-6 shadow-md relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500 dark:bg-red-400"></div>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 md:gap-6 pl-3">
+            <div class="min-w-0">
+              <span class="badge bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/50 font-bold px-3 py-1">
+                <span class="w-2 h-2 rounded-full bg-red-500 dark:bg-red-400 mr-2"></span> In class now
+              </span>
+              <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white leading-tight mt-3 break-words">{{ current_class.building }} — {{ current_class.room }}</h2>
+              <p class="text-sm font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mt-2 break-words">{{ current_class.course_code }} · {{ current_class.type|slice:":3" }}</p>
+              <p class="text-base font-semibold text-gray-700 dark:text-gray-300 mt-1 break-words">{{ current_class.course_title }}</p>
+            </div>
+            <div class="bg-red-50 dark:bg-red-900/30 rounded-xl p-4 border border-red-100 dark:border-red-900/50 text-center shrink-0 w-full md:w-auto">
+              <p class="text-[0.65rem] font-black tracking-widest text-red-500 dark:text-red-400 uppercase">Class ends</p>
+              <p class="text-2xl font-black text-red-600 dark:text-red-400 tabular-nums mt-1">{{ current_class.end_time }}</p>
+              <p class="text-[0.65rem] font-bold text-red-400/80 dark:text-red-300/80 uppercase tracking-widest mt-1">{{ current_class.start_time }} - {{ current_class.end_time }}</p>
+            </div>
+          </div>
+        </div>
+        {% elif next_class %}
+        <div class="card-hover bg-white dark:bg-slate-800 border border-green-200 dark:border-green-900/50 rounded-2xl p-4 sm:p-6 shadow-md relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-must-green"></div>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 md:gap-6 pl-3">
+            <div class="min-w-0">
+              <span class="badge bg-green-50 dark:bg-green-900/30 text-must-darkGreen dark:text-green-400 border border-green-100 dark:border-green-900/50 font-bold px-3 py-1">
+                <span class="w-2 h-2 rounded-full bg-must-green mr-2"></span> Not in a scheduled class
+              </span>
+              <h2 class="text-2xl font-black text-gray-900 dark:text-white leading-tight mt-3 break-words">
+                Next: {{ next_class.day_label|default:"today" }} at {{ next_class.start_time }}
+              </h2>
+              <p class="text-sm font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mt-2 break-words">{{ next_class.building }} — {{ next_class.room }}</p>
+              <p class="text-base font-semibold text-gray-700 dark:text-gray-300 mt-1 break-words">{{ next_class.course_code }} · {{ next_class.course_title }}</p>
+            </div>
+            <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4 border border-green-100 dark:border-green-900/50 text-center shrink-0 w-full md:w-auto">
+              <p class="text-[0.65rem] font-black tracking-widest text-must-darkGreen dark:text-green-400 uppercase">Class time</p>
+              <p class="text-2xl font-black text-must-darkGreen dark:text-green-400 tabular-nums mt-1">{{ next_class.start_time }}</p>
+              <p class="text-[0.65rem] font-bold text-green-500/80 uppercase tracking-widest mt-1">until {{ next_class.end_time }}</p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- Today's classes -->
+      {% if today_meetings %}
+      <section class="flex flex-col gap-4 mb-8">
+        <div class="flex items-center gap-3 px-1">
+          <h2 class="text-sm font-black uppercase tracking-widest text-must-blue dark:text-blue-400">{{ today_label }}'s classes</h2>
+          <div class="h-[1px] bg-gray-200 dark:bg-slate-700 flex-grow"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for m in today_meetings %}
+          <div class="card-hover bg-white dark:bg-slate-800 border {% if current_class and m.start_time == current_class.start_time and m.room == current_class.room %}border-red-300 dark:border-red-800 ring-1 ring-red-200 dark:ring-red-900/50{% else %}border-gray-200 dark:border-slate-700{% endif %} rounded-2xl p-5 flex flex-col gap-3 shadow-sm relative overflow-hidden min-h-[130px]">
+            <div class="absolute top-0 left-0 w-1.5 h-full {% if current_class and m.start_time == current_class.start_time and m.room == current_class.room %}bg-red-500{% else %}bg-must-blue{% endif %}"></div>
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <h3 class="font-black text-gray-900 dark:text-white text-lg leading-tight break-words">{{ m.room }}</h3>
+                <p class="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mt-1.5 break-words">{{ m.building }}</p>
+              </div>
+              <span class="badge {% if 'lec' in m.type|lower %}bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800{% else %}bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800{% endif %} px-2 py-0.5 shrink-0">{{ m.type|slice:":3" }}</span>
+            </div>
+            <div class="bg-gray-50/80 dark:bg-slate-700/80 rounded-xl p-3 border border-gray-100 dark:border-slate-600 mt-auto">
+              <p class="text-[0.65rem] font-black tracking-widest text-must-blue dark:text-blue-400 uppercase mb-1">{{ m.start_time }} - {{ m.end_time }}</p>
+              <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 leading-tight break-words">{{ m.course_code }} · {{ m.course_title }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% else %}
+      <div class="py-10 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 mb-8">
+        <h3 class="text-gray-900 dark:text-white text-base font-bold">No classes on {{ today_label }}</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Check the weekly schedule below.</p>
+      </div>
+      {% endif %}
+
+      <!-- Weekly schedule -->
+      {% if weekly_schedule %}
+      <section class="flex flex-col gap-4">
+        <div class="flex items-center gap-3 px-1">
+          <h2 class="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">Weekly schedule</h2>
+          <div class="h-[1px] bg-gray-200 dark:bg-slate-700 flex-grow"></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {% for day in weekly_schedule %}
+          <div class="bg-white dark:bg-slate-800 rounded-2xl border {% if day.is_today %}border-must-blue dark:border-blue-700{% else %}border-gray-200 dark:border-slate-700{% endif %} shadow-sm overflow-hidden">
+            <div class="px-5 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between bg-gray-50/70 dark:bg-slate-700/40">
+              <h3 class="text-sm font-black uppercase tracking-widest {% if day.is_today %}text-must-blue dark:text-blue-400{% else %}text-gray-600 dark:text-gray-300{% endif %}">{{ day.day }}</h3>
+              {% if day.is_today %}<span class="badge bg-blue-50 dark:bg-blue-900/30 text-must-lightBlue dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 px-2 py-0.5">Today</span>{% endif %}
+            </div>
+            <div class="divide-y divide-gray-100 dark:divide-slate-700">
+              {% for m in day.meetings %}
+              <div class="px-4 sm:px-5 py-3">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-mono text-xs font-bold text-must-blue dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-900/50 rounded-lg px-2.5 py-1.5 whitespace-nowrap tabular-nums">{{ m.start_time }} - {{ m.end_time }}</span>
+                  <div class="flex items-center justify-end gap-2 min-w-0">
+                    <span class="text-sm font-black text-gray-700 dark:text-gray-200 truncate">{{ m.building }} {{ m.room }}</span>
+                    <span class="badge {% if 'lec' in m.type|lower %}bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800{% else %}bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800{% endif %} px-2 py-0.5 shrink-0">{{ m.type|slice:":3" }}</span>
+                  </div>
+                </div>
+                <div class="mt-2 min-w-0">
+                  <p class="text-sm font-bold text-gray-900 dark:text-white break-words">{{ m.course_code }} <span class="font-medium text-gray-500 dark:text-gray-400">{{ m.course_title }}</span></p>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+    {% endif %}
+
+  {% else %}
+  <div class="py-20 flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+    <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-must-blue dark:text-blue-400 mb-5">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+    </div>
+    <h3 class="text-gray-900 dark:text-white text-lg font-bold">Find any instructor</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center px-4 max-w-md">Type a name above to see their current class, today's schedule and the full week.</p>
+  </div>
+  {% endif %}
+</main>
+
+<script>
+(function () {
+  function updateClock() {
+    const now = new Date();
+    const opts = { timeZone: 'Africa/Cairo', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true };
+    const dateOpts = { timeZone: 'Africa/Cairo', weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-EG', opts);
+    document.getElementById('live-date').textContent  = now.toLocaleDateString('en-EG', dateOpts);
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Autocomplete
+  const input = document.getElementById('instructor-input');
+  const box = document.getElementById('suggestions');
+  const form = document.getElementById('instructor-form');
+  let timer = null;
+
+  function hideSuggestions() {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+  }
+
+  function renderSuggestions(names) {
+    if (!names.length) { hideSuggestions(); return; }
+    box.innerHTML = '';
+    names.forEach(function (name) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = name;
+      btn.className = 'block w-full text-left px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors';
+      btn.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        input.value = name;
+        hideSuggestions();
+        form.submit();
+      });
+      box.appendChild(btn);
+    });
+    box.classList.remove('hidden');
+  }
+
+  async function fetchSuggestions(q) {
+    try {
+      const res = await fetch('/api/instructors/?q=' + encodeURIComponent(q));
+      const data = await res.json();
+      renderSuggestions(data.results || []);
+    } catch (err) {
+      hideSuggestions();
+    }
+  }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 2) { hideSuggestions(); return; }
+    timer = setTimeout(function () { fetchSuggestions(q); }, 180);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!box.contains(e.target) && e.target !== input) hideSuggestions();
+  });
+})();
+
+function toggleTheme() {
+  if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('color-theme', 'light');
+  } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('color-theme', 'dark');
+  }
+}
+</script>
+</body>
+</html>

@@ -54,6 +54,11 @@
       </div>
     </div>
     
+    <a href="{% url 'instructor' %}" class="flex items-center justify-center sm:justify-start gap-2 min-h-[44px] w-full sm:w-auto text-sm font-bold text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 border border-must-lightBlue/50 dark:border-slate-700 rounded-lg px-4 py-2.5 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+      Find Instructor
+    </a>
+
     <div class="flex items-center w-full sm:w-auto justify-between sm:justify-end border border-must-lightBlue/50 dark:border-slate-700 bg-must-blue/30 dark:bg-slate-800/50 backdrop-blur-sm rounded-lg px-4 py-2">
       <button id="theme-toggle" onclick="toggleTheme()" class="text-gray-300 dark:text-gray-400 hover:bg-white/10 dark:hover:bg-slate-700/50 focus:outline-none rounded-lg text-xl p-1.5 mr-2 transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -121,15 +126,15 @@
       </div>
       
       <!-- Action Buttons -->
-      <div class="flex gap-3 w-full xl:w-auto xl:flex-1 shrink-0 pt-2 xl:pt-0">
-        <button type="submit" class="flex-1 justify-center bg-must-blue dark:bg-blue-600 hover:bg-must-lightBlue dark:hover:bg-blue-500 active:scale-95 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-must-blue/50 dark:focus:ring-blue-500/50">
+      <div class="grid grid-cols-2 xl:flex gap-3 w-full xl:w-auto xl:flex-1 shrink-0 pt-2 xl:pt-0">
+        <button type="submit" class="col-span-2 xl:col-span-1 xl:flex-1 min-h-[44px] justify-center bg-must-blue dark:bg-blue-600 hover:bg-must-lightBlue dark:hover:bg-blue-500 active:scale-95 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-must-blue/50 dark:focus:ring-blue-500/50">
           Check Now
         </button>
-        <a href="{% url 'dashboard' %}" class="flex items-center justify-center bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 active:scale-95 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 shadow-sm transition-all focus:outline-none font-bold text-sm">
+        <a href="{% url 'dashboard' %}" class="min-h-[44px] flex items-center justify-center bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 active:scale-95 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 shadow-sm transition-all focus:outline-none font-bold text-sm">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           Reset
         </a>
-        <a href="{% url 'timetable' %}?building={{ selected_building|urlencode }}&course={{ selected_course|urlencode }}" class="flex items-center justify-center bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 active:scale-95 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl text-sm font-bold border border-gray-200 dark:border-slate-600 shadow-sm transition-all">
+        <a href="{% url 'timetable' %}?building={{ selected_building|urlencode }}&course={{ selected_course|urlencode }}" class="min-h-[44px] flex items-center justify-center bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 active:scale-95 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl text-sm font-bold border border-gray-200 dark:border-slate-600 shadow-sm transition-all">
            <svg class="w-4 h-4 mr-1.5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>Grid
         </a>
       </div>
